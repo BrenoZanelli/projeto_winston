@@ -17,8 +17,8 @@ db = st.session_state.db
 
 if "ai_client" not in st.session_state:
     st.session_state.ai_client = OpenAI(
-        # Graças ao network_mode: host, o container vai falar direto com o seu Linux físico
-        base_url="http://127.0.0.1:8080/v1"
+        base_url="http://127.0.0.1:8080/v1",
+        api_key="winston-local"  # Impede o disparo do erro de credenciais ausentes
     )
 client = st.session_state.ai_client
 
