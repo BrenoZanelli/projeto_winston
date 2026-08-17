@@ -10,17 +10,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Configura o stub do driver CUDA para linkagem durante o build
+# Configura o stub do driver CUDA para linkagem
 RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 \
     && echo "/usr/local/cuda/lib64/stubs" > /etc/ld.so.conf.d/cuda-stubs.conf \
     && ldconfig
 
 WORKDIR /build
 
-# Clona apenas a última versão do repositório
 RUN git clone --depth 1 https://github.com/ggerganov/llama.cpp.git .
 
-# Compila o binário do llama-server
 RUN cmake -B build -DGGML_CUDA=ON -DCMAKE_LIBRARY_PATH=/usr/local/cuda/lib64/stubs
 RUN cmake --build build --config Release --target llama-server -j$(nproc)
 
@@ -38,9 +36,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia o executável compilado da etapa 1
+# Copia o executável e TODAS as bibliotecas .so compiladas
 COPY --from=builder /build/build/bin/llama-server /usr/local/bin/llama-server
-RUN chmod +x /usr/local/bin/llama-server
+COPY --from=builder /build/build/bin/*.so /usr/local/lib/
+RUN ldconfig && chmod +x /usr/local/bin/llama-server
 
 WORKDIR /app
 
