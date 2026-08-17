@@ -2,7 +2,7 @@
 
 # 1. Inicia o llama-server em segundo plano
 echo "Iniciando o llama-server..."
-llama-server -m /models/llama-3.2-3b.gguf --gpu-layers 99 --ctx-size 8192 --host 127.0.0.1 --port 8080 &
+llama-server -m /models/llama-3.2-3b.gguf --gpu-layers 99 --ctx-size 4096 --host 127.0.0.1 --port 8080 &
 
 # 2. Aguarda até 30 segundos pela inicialização da API (com timeout para não travar o container)
 echo "Aguardando o llama-server carregar na VRAM..."

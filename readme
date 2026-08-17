@@ -1,5 +1,107 @@
-comando para acessar o winston no browser:
-http://localhost:8501/
+#Projeto Winston - Assistente de IA Local com Docker e Aceleração CUDA
 
-comando para subir o llama server
-llama-server --model ~/Documentos/projeto_ia/modelos/llama-3.2-3b.gguf --gpu-layers 99 --ctx-size 4096 --host 127.0.0.1 --port 8080
+O **Winston** é uma aplicação completa de Inteligência Artificial para execução local, combinando um frontend moderno e reativo em **Streamlit** com a inferência de alto desempenho do **llama.cpp (llama-server)** acelerado por GPU (NVIDIA CUDA).
+
+Toda a infraestrutura é orquestrada via **Docker e Docker Compose**, encapsulando as dependências de sistema, drivers e ambiente de execução em uma arquitetura limpa e reproduzível.
+
+---
+
+##Tecnologias Utilizadas
+
+- **Python 3.10+ / Streamlit**: Interface web interativa para conversação em tempo real.
+- **llama.cpp / llama-server**: Motor de inferência em C++ de alta eficiência com suporte a quantizações GGUF.
+- **NVIDIA CUDA (12.x)**: Aceleração computacional em hardware (GPU) via Docker Container Toolkit.
+- **Docker & Docker Compose**: Empacotamento, orquestração e gerenciamento de processos.
+
+---
+
+##Pré-requisitos
+
+Antes de iniciar, garanta que seu ambiente possua:
+
+1. **Docker Engine** e **Docker Compose** instalados e em execução.
+2. **NVIDIA Drivers** e **NVIDIA Container Toolkit** configurados (para suporte a aceleração por GPU no contêiner).
+3. Pelo menos **4 GB de espaço livre em disco** para armazenamento dos pesos do modelo.
+
+---
+
+## Passo a Passo: Download e Configuração do Modelo GGUF
+
+Para manter o repositório leve e dentro dos padrões de versionamento do Git, o arquivo com os pesos do modelo (`.gguf`) **não** está versionado no repositório e deve ser baixado separadamente.
+
+### 1. Criar o diretório de modelos
+
+Na raiz do projeto, certifique-se de que o diretório `modelos/` existe:
+
+```bash
+mkdir -p modelos
+```
+
+### 2. Baixar o Modelo Llama 3.2 3B Instruct (GGUF)
+
+O projeto está configurado por padrão para utilizar o **Llama-3.2-3B-Instruct** quantizado em 4 bits (`Q4_K_M`), que oferece um equilíbrio excelente entre fidelidade de resposta, uso moderado de VRAM (~2.5 GB a 3 GB) e velocidade de geração.
+
+Execute o comando abaixo no terminal para realizar o download direto via `curl` para a pasta correta:
+
+```bash
+curl -L -o modelos/llama-3.2-3b.gguf \
+  https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf
+```
+
+> **Opção Alternativa (via Hugging Face CLI):**
+> Caso prefira utilizar a ferramenta oficial do Hugging Face:
+> ```bash
+> pip install huggingface-hub
+> huggingface-cli download bartowski/Llama-3.2-3B-Instruct-GGUF Llama-3.2-3B-Instruct-Q4_K_M.gguf --local-dir modelos --local-dir-use-symlinks False
+> mv modelos/Llama-3.2-3B-Instruct-Q4_K_M.gguf modelos/llama-3.2-3b.gguf
+> ```
+
+---
+
+##Estrutura de Arquivos
+
+Certifique-se de que sua estrutura de pastas esteja organizada da seguinte forma:
+
+```text
+projeto_winston/
+├── app/
+│   └── main.py
+├── modelos/
+│   └── llama-3.2-3b.gguf      <-- Arquivo baixado
+├── Dockerfile
+├── docker-compose.yml
+├── entrypoint.sh
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
+
+---
+
+##Como Executar
+
+Com o arquivo `.gguf` devidamente posicionado em `modelos/llama-3.2-3b.gguf`, execute o comando:
+
+```bash
+docker compose up --build
+```
+
+O Docker construirá a imagem unificada, inicializará o motor `llama-server` alocando as camadas na GPU NVIDIA e, em seguida, iniciará o servidor do Streamlit.
+
+###Acessando a Interface
+
+Abra o seu navegador e acerte a URL:
+
+```text
+http://localhost:8501
+```
+
+---
+
+##Configurações e Customizações
+
+- **Contexto (Context Window):** O tamanho de contexto padrão está definido em `4096` tokens no script `entrypoint.sh` (`--ctx-size 4096`).
+- **Offload na GPU:** O parâmetro `--gpu-layers 99` garante que todas as camadas suportadas sejam enviadas para a VRAM da placa de vídeo.
+- **Portas Expostas:**
+  - `8501`: Interface Web do Streamlit
+  - `8080`: API REST / OpenAI-compatible do `llama-server`
