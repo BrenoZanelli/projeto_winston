@@ -1,0 +1,5 @@
+comando para acessar o winston no browser:
+http://localhost:8501/
+
+comando para subir o llama server
+llama-server --model ~/Documentos/projeto_ia/modelos/llama-3.2-3b.gguf --gpu-layers 99 --ctx-size 4096 --host 127.0.0.1 --port 8080

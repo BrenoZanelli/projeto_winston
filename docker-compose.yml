@@ -1,0 +1,20 @@
+services:
+  winston-all-in-one:
+    build: .
+    container_name: winston_app
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    restart: always
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./app:/app/app
+      - ~/Documentos/projeto_ia/modelos:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
